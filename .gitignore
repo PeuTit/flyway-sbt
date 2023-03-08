@@ -3,3 +3,18 @@
 *.iml
 target/
 project/target/
+
+# vscode
+.vscode/
+
+# bloop
+.bloop/
+project/.bloop
+
+# metals
+.metals/
+project/metals.sbt
+project/project
+
+# bsp
+.bsp/
