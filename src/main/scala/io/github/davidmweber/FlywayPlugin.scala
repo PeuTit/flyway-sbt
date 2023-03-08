@@ -67,9 +67,9 @@ object FlywayPlugin extends AutoPlugin {
     //*********************
     // settings for migrate
     //*********************
-    val flywayIgnoreMissingMigrations = settingKey[Boolean]("Ignores missing migrations when reading the metadata table. (default: false)")
-    val flywayIgnoreFutureMigrations = settingKey[Boolean]("Ignores future migrations when reading the metadata table. These are migrations that were performed by a newer deployment of the application that are not yet available in this version. For example: we have migrations available on the classpath up to version 3.0. The metadata table indicates that a migration to version 4.0 (unknown to us) has already been applied. Instead of bombing out (fail fast) with an exception, a warning is logged and Flyway continues normally. This is useful for situations where one must be able to redeploy an older version of the application after the database has been migrated by a newer one. (default: true)")
-    val flywayIgnoreFailedFutureMigration = settingKey[Boolean]("Ignores failed future migrations when reading the metadata table. These are migrations that we performed by a newer deployment of the application that are not yet available in this version. For example: we have migrations available on the classpath up to version 3.0. The metadata table indicates that a migration to version 4.0 (unknown to us) has already been attempted and failed. Instead of bombing out (fail fast) with an exception, a warning is logged and Flyway terminates normally. This is useful for situations where a database rollback is not an option. An older version of the application can then be redeployed, even though a newer one failed due to a bad migration. (default: false)")
+    // val flywayIgnoreMissingMigrations = settingKey[Boolean]("Ignores missing migrations when reading the metadata table. (default: false)")
+    // val flywayIgnoreFutureMigrations = settingKey[Boolean]("Ignores future migrations when reading the metadata table. These are migrations that were performed by a newer deployment of the application that are not yet available in this version. For example: we have migrations available on the classpath up to version 3.0. The metadata table indicates that a migration to version 4.0 (unknown to us) has already been applied. Instead of bombing out (fail fast) with an exception, a warning is logged and Flyway continues normally. This is useful for situations where one must be able to redeploy an older version of the application after the database has been migrated by a newer one. (default: true)")
+    // val flywayIgnoreFailedFutureMigration = settingKey[Boolean]("Ignores failed future migrations when reading the metadata table. These are migrations that we performed by a newer deployment of the application that are not yet available in this version. For example: we have migrations available on the classpath up to version 3.0. The metadata table indicates that a migration to version 4.0 (unknown to us) has already been attempted and failed. Instead of bombing out (fail fast) with an exception, a warning is logged and Flyway terminates normally. This is useful for situations where a database rollback is not an option. An older version of the application can then be redeployed, even though a newer one failed due to a bad migration. (default: false)")
     val flywayPlaceholderReplacement = settingKey[Boolean]("Whether placeholders should be replaced. (default: true)")
     val flywayPlaceholders = settingKey[Map[String, String]]("A map of <placeholder, replacementValue> to apply to sql migration scripts.")
     val flywayPlaceholderPrefix = settingKey[String]("The prefix of every placeholder. (default: ${ )")
@@ -108,8 +108,9 @@ object FlywayPlugin extends AutoPlugin {
                                             cleanOnValidationError: Boolean, cleanDisabled: Boolean, target: String, outOfOrder: Boolean,
                                             callbacks: Seq[Callback], skipDefaultCallbacks: Boolean)
   private case class ConfigSqlMigration(sqlMigrationPrefix: String, repeatableSqlMigrationPrefix: String, sqlMigrationSeparator: String, sqlMigrationSuffixes: String*)
-  private case class ConfigMigrate(ignoreMissingMigrations: Boolean, ignoreFutureMigrations: Boolean, ignoreFailedMigrations: Boolean,
-                                   baselineOnMigrate: Boolean, validateOnMigrate: Boolean, mixed: Boolean, group: Boolean, installedBy: String)
+  // private case class ConfigMigrate(ignoreMissingMigrations: Boolean, ignoreFutureMigrations: Boolean, ignoreFailedMigrations: Boolean,
+                                  //  baselineOnMigrate: Boolean, validateOnMigrate: Boolean, mixed: Boolean, group: Boolean, installedBy: String)
+  private case class ConfigMigrate(baselineOnMigrate: Boolean, validateOnMigrate: Boolean, mixed: Boolean, group: Boolean, installedBy: String)
   private case class ConfigPlaceholder(placeholderReplacement: Boolean, placeholders: Map[String, String],
                                    placeholderPrefix: String, placeholderSuffix: String)
   private case class Config(dataSource: ConfigDataSource, base: ConfigBase, migrationLoading: ConfigMigrationLoading,
@@ -154,9 +155,9 @@ object FlywayPlugin extends AutoPlugin {
       flywayOutOfOrder := defaults.isOutOfOrder,
       flywayCallbacks := new Array[Callback](0),
       flywaySkipDefaultCallbacks := defaults.isSkipDefaultCallbacks,
-      flywayIgnoreMissingMigrations := defaults.isIgnoreMissingMigrations,
-      flywayIgnoreFutureMigrations := defaults.isIgnoreFutureMigrations,
-      flywayIgnoreFailedFutureMigration := defaults.isIgnoreFutureMigrations,
+      // flywayIgnoreMissingMigrations := defaults.isIgnoreMissingMigrations,
+      // flywayIgnoreFutureMigrations := defaults.isIgnoreFutureMigrations,
+      // flywayIgnoreFailedFutureMigration := defaults.isIgnoreFutureMigrations,
       flywayPlaceholderReplacement := defaults.isPlaceholderReplacement,
       flywayPlaceholders := defaults.getPlaceholders.asScala.toMap,
       flywayPlaceholderPrefix := defaults.getPlaceholderPrefix,
@@ -172,17 +173,19 @@ object FlywayPlugin extends AutoPlugin {
       flywayConfigBase := ConfigBase(flywaySchemas.value, flywayTable.value, flywayBaselineVersion.value, flywayBaselineDescription.value),
       flywayConfigMigrationLoading := ConfigMigrationLoading(flywayLocations.value, flywayResolvers.value, flywaySkipDefaultResolvers.value, flywayEncoding.value, flywayCleanOnValidationError.value, flywayCleanDisabled.value, flywayTarget.value, flywayOutOfOrder.value, flywayCallbacks.value, flywaySkipDefaultCallbacks.value),
       flywayConfigSqlMigration := ConfigSqlMigration(flywaySqlMigrationPrefix.value, flywayRepeatableSqlMigrationPrefix.value, flywaySqlMigrationSeparator.value, flywaySqlMigrationSuffixes.value:_*),
-      flywayConfigMigrate := ConfigMigrate(flywayIgnoreMissingMigrations.value, flywayIgnoreFutureMigrations.value, flywayIgnoreFailedFutureMigration.value,
-      flywayBaselineOnMigrate.value, flywayValidateOnMigrate.value, flywayMixed.value, flywayGroup.value, flywayInstalledBy.value),
+      // flywayConfigMigrate := ConfigMigrate(flywayIgnoreMissingMigrations.value, flywayIgnoreFutureMigrations.value, flywayIgnoreFailedFutureMigration.value,
+      // flywayBaselineOnMigrate.value, flywayValidateOnMigrate.value, flywayMixed.value, flywayGroup.value, flywayInstalledBy.value),
+      flywayConfigMigrate := ConfigMigrate(flywayBaselineOnMigrate.value, flywayValidateOnMigrate.value, flywayMixed.value, flywayGroup.value, flywayInstalledBy.value),
       flywayConfigPlaceholder := ConfigPlaceholder(flywayPlaceholderReplacement.value, flywayPlaceholders.value, flywayPlaceholderPrefix.value, flywayPlaceholderSuffix.value),
       flywayConfig := Config(flywayConfigDataSource.value, flywayConfigBase.value, flywayConfigMigrationLoading.value, flywayConfigSqlMigration.value, flywayConfigMigrate.value, flywayConfigPlaceholder.value),
+      // flywayConfig := Config(flywayConfigDataSource.value, flywayConfigBase.value, flywayConfigMigrationLoading.value, flywayConfigSqlMigration.value, flywayConfigPlaceholder.value),
       flywayClasspath := (Def.taskDyn {
         // fullClasspath triggers the compile task, so use a dynamic task to only run it if we need to.
         // https://github.com/flyway/flyway-sbt/issues/10
         if (flywayLocations.value.forall(_.startsWith("filesystem:"))) {
-          externalDependencyClasspath in conf
+          conf / externalDependencyClasspath
         } else {
-          fullClasspath in conf
+          conf / fullClasspath
         }
       }).value,
       // Tasks
@@ -277,11 +280,11 @@ object FlywayPlugin extends AutoPlugin {
       .sqlMigrationSuffixes(config.sqlMigrationSuffixes: _*)
     }
     def configure(config: ConfigMigrate): FluentConfiguration = {
-      val ignoreFutureMigrations = if(config.ignoreFailedMigrations) true else config.ignoreFutureMigrations
+      // val ignoreFutureMigrations = if(config.ignoreFailedMigrations) true else config.ignoreFutureMigrations
 
+      // .ignoreMissingMigrations(config.ignoreMissingMigrations)
+      // .ignoreFutureMigrations(ignoreFutureMigrations)
       flyway
-      .ignoreMissingMigrations(config.ignoreMissingMigrations)
-      .ignoreFutureMigrations(ignoreFutureMigrations)
       .baselineOnMigrate(config.baselineOnMigrate)
       .validateOnMigrate(config.validateOnMigrate)
       .mixed(config.mixed)
@@ -316,6 +319,8 @@ object FlywayPlugin extends AutoPlugin {
     def warn(message: String): Unit = { streams foreach (_.log.warn(message)) }
     def error(message: String): Unit = { streams foreach (_.log.error(message)) }
     def error(message: String, e: Exception): Unit = { streams foreach (_.log.error(message)); streams foreach (_.log.trace(e)) }
+
+    def notice(message: String): Unit = ???
   }
 }
 
